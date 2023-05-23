@@ -1,0 +1,19 @@
+{
+  "name": "node-red-contrib-job-cluster-util",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "node-red": {
+      "nodes": {
+          "node-red-contrib-job-cluster-util": "index.js"
+      }
+  },
+  "dependencies": {
+      "ip": "^1.1.8"
+  }
+}
