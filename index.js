@@ -2,8 +2,13 @@ const fs = require("fs");
 const path = require("path");
 const ip = require("ip");
 const os = require("os");
+const crypto = require("crypto");
 
 module.exports = function (RED) {
+
+    //このNodeREDのUUID
+    RED.util.procuuid = crypto.randomUUID()
+
     //IP取得
     RED.util.getLocalAddress = () => {
         const ifacesObj = {}
@@ -79,5 +84,67 @@ module.exports = function (RED) {
         }
     }
     
+    // //mapでのlistのpop実装
+    // RED.util.mappop = (map) => {
+    //     try {
+    //         node.warn(global.keys());
+    //         const keys = global.keys();
+    //         const _global = {}
+    //         for (const key of keys) {
+    //             _global[key] = global.get(key)
+    //             node.warn({ key: key, v: _global[key]});
+    //         }
+    //         msg.global = JSON.stringify(_global)
+    //         msg._global = _global
+            
+    //         //const index_js = fs.readFileSync(path.join(process.cwd(), 'template', 'index.js'), 'utf-8')
+    //         fs.writeFileSync(path.join("/workspace", 'global.json'), JSON.stringify(_global))
+            
+    //         return msg;
+    //     } catch (error) {
+    //         return null
+    //     }
+    // }
+
+    //
+    RED.util.expotGlobal = (filepath) => {
+        try {
+            const keys = global.keys();
+            const _global = {}
+            for (const key of keys) {
+                _global[key] = global.get(key)
+            }
+            msg.global = JSON.stringify(_global)
+            msg._global = _global
+            fs.writeFileSync(filepath, JSON.stringify(_global))
+            return true;
+        } catch (error) {
+            return false
+        }
+    }
+    
+    //
+    RED.util.importGlobal = (filepath) => {
+        try {
+            const global_json = fs.readFileSync(filepath, 'utf-8')
+            const _global = JSON.parse(global_json);
+            for (const key in _global) {
+                global.set(key, _global[key])
+            }
+            return _global;
+        } catch (error) {
+            return null
+        }
+    }
+    
+    RED.util.getWorkerInfo = (id) => {
+        const WORKER_HOSTS = global.get("WORKER_HOSTS") || new Map();
+        for (const [workerName, worker] of WORKER_HOSTS) {                //topics.${selectTopic}
+            if (worker.ID == id) {
+                return [workerName,worker]
+            }
+        }
+        return [null,null]
+    }
 
 }
