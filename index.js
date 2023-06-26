@@ -49,10 +49,10 @@ module.exports = function (RED) {
     RED.util.setPropByPath = (obj, path, value) => {
         const pathArr = path.split('.')
         let cnt = 1
-        const _obj = (cnt == pathArr.length )? value : obj
+        const _obj = (cnt == pathArr.length) ? value : obj
         let current = _obj
         for (const prop of pathArr) {
-            current[prop] = (cnt == pathArr.length )? value : (typeof current[prop]=="object")? current[prop] :{}
+            current[prop] = (cnt == pathArr.length) ? value : (typeof current[prop] == "object") ? current[prop] : {}
             current = current[prop]
             cnt++
         }
@@ -83,7 +83,7 @@ module.exports = function (RED) {
             return null
         }
     }
-    
+
     // //mapでのlistのpop実装
     // RED.util.mappop = (map) => {
     //     try {
@@ -96,10 +96,10 @@ module.exports = function (RED) {
     //         }
     //         msg.global = JSON.stringify(_global)
     //         msg._global = _global
-            
+
     //         //const index_js = fs.readFileSync(path.join(process.cwd(), 'template', 'index.js'), 'utf-8')
     //         fs.writeFileSync(path.join("/workspace", 'global.json'), JSON.stringify(_global))
-            
+
     //         return msg;
     //     } catch (error) {
     //         return null
@@ -107,12 +107,12 @@ module.exports = function (RED) {
     // }
 
     //
-    RED.util.expotGlobal = (filepath) => {
+    RED.util.expotGlobal = (_this, filepath) => {
         try {
-            const keys = global.keys();
+            const keys = _this.global.keys();
             const _global = {}
             for (const key of keys) {
-                _global[key] = global.get(key)
+                _global[key] = _this.global.get(key)
             }
             msg.global = JSON.stringify(_global)
             msg._global = _global
@@ -122,29 +122,39 @@ module.exports = function (RED) {
             return false
         }
     }
-    
+
     //
-    RED.util.importGlobal = (filepath) => {
+    RED.util.importGlobal = (_this, filepath) => {
         try {
             const global_json = fs.readFileSync(filepath, 'utf-8')
             const _global = JSON.parse(global_json);
             for (const key in _global) {
-                global.set(key, _global[key])
+                _this.global.set(key, _global[key])
             }
             return _global;
         } catch (error) {
             return null
         }
     }
-    
-    RED.util.getWorkerInfo = (id) => {
-        const WORKER_HOSTS = global.get("WORKER_HOSTS") || new Map();
-        for (const [workerName, worker] of WORKER_HOSTS) {                //topics.${selectTopic}
-            if (worker.ID == id) {
-                return [workerName,worker]
+
+    RED.util.getWorkerInfo = (_this, id) => {
+        try {
+            const WORKER_HOSTS = _this.global.get("WORKER_HOSTS") || new Map();
+            for (const [workerName, worker] of WORKER_HOSTS) {                //topics.${selectTopic}
+                if (worker.ID == id || workerName == id) {
+                    return [workerName, worker]
+                }
             }
+            return [null, null]
+        } catch (error) {
+            console.error("getWorkerInfo:", _this, id, error)
+            return [null, null]
         }
-        return [null,null]
     }
 
+    const ColoredTextRegex = /\x1b[[0-9;]*m/g
+    //Remove logs Colored Text
+    RED.util.ColoredTextRemover = () => {
+        return ((typeof msg.payload === 'object') ? msg.payload.toString() : msg.payload).replace(ColoredTextRegex, '')
+    }
 }
