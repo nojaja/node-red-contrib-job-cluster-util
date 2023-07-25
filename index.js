@@ -3,6 +3,7 @@ const path = require("path");
 const ip = require("ip");
 const os = require("os");
 const crypto = require("crypto");
+const util = require('util')
 
 module.exports = function (RED) {
 
@@ -138,16 +139,23 @@ module.exports = function (RED) {
     }
 
     RED.util.getWorkerInfo = (_this, id) => {
+        //console.log("id",id)
+        //console.log("_this",util.inspect(_this))
+        //console.log("this",util.inspect(this))
+        //console.log("RED",util.inspect(RED))
+        
         try {
             const WORKER_HOSTS = _this.global.get("WORKER_HOSTS") || new Map();
             for (const [workerName, worker] of WORKER_HOSTS) {                //topics.${selectTopic}
+                //_this.__node__.warn(`workerName: ${workerName} ${id}`)
+                //_this.__node__.warn(`worker: ${worker.ID} ${id}`)
                 if (worker.ID == id || workerName == id) {
                     return [workerName, worker]
                 }
             }
             return [null, null]
         } catch (error) {
-            console.error("getWorkerInfo:", _this, id, error)
+            _this.__node__.error(`getWorkerInfo: ${error}  ${id}`)
             return [null, null]
         }
     }
